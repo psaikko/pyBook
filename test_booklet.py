@@ -15,7 +15,7 @@ def test_leaf_order_size_3():
 
 def test_leaf_order_two_sections():
     for n_leaves in range(5, 9):
-        order = booklet.leaf_order(n_leaves, 2)
+        order = booklet.leaf_order(n_leaves, 1)
         assert order == [2, 3, 4, 1, 6, 7, 8, 5]
 
 def test_leaf_order_padding():
@@ -23,7 +23,7 @@ def test_leaf_order_padding():
         for section_size in range(1, 5):
             order = booklet.leaf_order(n_leaves, section_size)
             n_booklet_leaves = len(order)
-            n_sections = math.ceil(n_leaves / section_size)
-            assert n_booklet_leaves == n_sections * section_size
+            n_sections = math.ceil(n_leaves / (section_size * 4))
+            assert n_booklet_leaves == n_sections * section_size * 4
             
 
