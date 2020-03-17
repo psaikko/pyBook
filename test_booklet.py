@@ -1,5 +1,17 @@
+import pytest
 import booklet
 import math
+import PyPDF2
+import io
+
+@pytest.fixture
+def pdf_stream():
+    reader = PyPDF2.PdfFileReader("testdata/test.pdf")
+    buffer = io.BytesIO()
+    writer = PyPDF2.PdfFileWriter()
+    writer.appendPagesFromReader(reader)
+    writer.write(buffer)
+    return buffer
 
 def test_leaf_order_size_1():
     order = booklet.leaf_order(4, 1)
@@ -25,5 +37,11 @@ def test_leaf_order_padding():
             n_booklet_leaves = len(order)
             n_sections = math.ceil(n_leaves / (section_size * 4))
             assert n_booklet_leaves == n_sections * section_size * 4
-            
+
+def test_pdf_padding(pdf_stream):
+    out_stream = io.BytesIO()
+    booklet.apply_padding(pdf_stream, out_stream, 18)
+    reader = PyPDF2.PdfFileReader(out_stream)
+    assert reader.getNumPages() == 18
+    
 
