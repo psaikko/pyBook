@@ -3,6 +3,7 @@ import collections # deque
 import sys # argv
 import PyPDF2
 import io # StringIO
+import argparse
 
 def leaf_order(n_leaves, section_size):
     """Compute leaf order for booklet printing."""
@@ -78,4 +79,27 @@ def merge_sheets(in_file, out_file):
     writer.write(out_file)
 
 if __name__ == "__main__":
-    pass
+    parser = argparse.ArgumentParser(description="A tool for reordering and merging pages for book(let) binding.")
+    parser.add_argument("infile", type=argparse.FileType('rb'), 
+        help="Input document")
+    parser.add_argument("outfile", type=argparse.FileType('wb'),
+        help="Filepath for booklet-format output")
+    parser.add_argument("-s", "--section-size", type=int, default=4,
+        help="Sheets per bound section. Each sheet holds four pages of the input document, two front and two back.\
+             (e.g. with portraint A4-size input, sheets are landscape A3-size)")
+    args = parser.parse_args()
+
+    infile = args.infile
+    outfile = args.outfile
+    section_size = args.section_size
+
+    reader = PyPDF2.PdfFileReader(infile)
+    n_content_pages = reader.getNumPages()
+    order = leaf_order(n_content_pages, section_size)
+
+    padded_stream = io.BytesIO()
+    ordered_stream = io.BytesIO()
+
+    apply_padding(infile, padded_stream, len(order))
+    reorder_pages(padded_stream, ordered_stream, order)
+    merge_sheets(ordered_stream, outfile)
