@@ -1,0 +1,3 @@
+pytest
+PyPDF2==1.26
+PyQt5==5.14
