@@ -5,22 +5,22 @@ import PyPDF2
 import io # StringIO
 import argparse
 
-def leaf_order(n_leaves, section_size):
-    """Compute leaf order for booklet printing."""
+def page_order(n_pages, section_size):
+    """Compute page order for booklet printing."""
 
-    n_sections = math.ceil(n_leaves / (section_size * 4))
-    leaves = list(range(1, 1 + n_sections * section_size * 4))
+    n_sections = math.ceil(n_pages / (section_size * 4))
+    pages = list(range(1, 1 + n_sections * section_size * 4))
 
     out_order = []
 
     for _ in range(n_sections):
         section_order = []
-        section_leaves, leaves = collections.deque(leaves[:section_size*4]), leaves[section_size*4:]
+        section_pages, pages = collections.deque(pages[:section_size*4]), pages[section_size*4:]
         for _ in range(section_size):
-            outside_left = section_leaves.pop()
-            outside_right = section_leaves.popleft()
-            inside_left = section_leaves.popleft()
-            inside_right = section_leaves.pop()
+            outside_left = section_pages.pop()
+            outside_right = section_pages.popleft()
+            inside_left = section_pages.popleft()
+            inside_right = section_pages.pop()
 
             section_order = [inside_left, inside_right, outside_left, outside_right] + section_order
         out_order += section_order
@@ -56,7 +56,7 @@ def reorder_pages(in_file, out_file, page_order):
     writer.write(out_file)
 
 def merge_sheets(in_file, out_file):
-    """Merge leaf-pairs into sheets for printing."""
+    """Merge page pairs into sheets for printing."""
 
     writer = PyPDF2.PdfFileWriter()
     reader = PyPDF2.PdfFileReader(in_file)
@@ -68,13 +68,13 @@ def merge_sheets(in_file, out_file):
         i_left = i*2
         i_right = i*2 + 1
 
-        left_leaf = reader.getPage(i_left)
-        right_leaf = reader.getPage(i_right)
+        left_page = reader.getPage(i_left)
+        right_page = reader.getPage(i_right)
 
-        w = left_leaf.mediaBox.getWidth()
+        w = left_page.mediaBox.getWidth()
 
-        left_leaf.mergeTranslatedPage(right_leaf, w, 0, expand=True)
-        writer.addPage(left_leaf)
+        left_page.mergeTranslatedPage(right_page, w, 0, expand=True)
+        writer.addPage(left_page)
 
     writer.write(out_file)
 
@@ -95,7 +95,7 @@ if __name__ == "__main__":
 
     reader = PyPDF2.PdfFileReader(infile)
     n_content_pages = reader.getNumPages()
-    order = leaf_order(n_content_pages, section_size)
+    order = page_order(n_content_pages, section_size)
 
     padded_stream = io.BytesIO()
     ordered_stream = io.BytesIO()
