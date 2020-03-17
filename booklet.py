@@ -28,7 +28,7 @@ def leaf_order(n_leaves, section_size):
 
 def apply_padding(in_file, out_file, pad_to_length):
     """Pad PDF file to specified length with empty pages."""
-
+    
     writer = PyPDF2.PdfFileWriter()
     reader = PyPDF2.PdfFileReader(in_file)
 
@@ -40,6 +40,19 @@ def apply_padding(in_file, out_file, pad_to_length):
     
     writer.write(out_file)
 
+def reorder_pages(in_file, out_file, page_order):
+    """Permute page order of in_file to out_file according to page_order."""
+
+    writer = PyPDF2.PdfFileWriter()
+    reader = PyPDF2.PdfFileReader(in_file)
+
+    for i in page_order:
+        writer.addPage(reader.getPage(i-1))
+    
+    writer.write(out_file)
+
+if __name__ == "__main__":
+    pass
 
 
     

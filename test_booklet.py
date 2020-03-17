@@ -44,4 +44,25 @@ def test_pdf_padding(pdf_stream):
     reader = PyPDF2.PdfFileReader(out_stream)
     assert reader.getNumPages() == 18
     
+def test_reordering(pdf_stream):
+    reader = PyPDF2.PdfFileReader(pdf_stream)
+    n_content_pages = reader.getNumPages()
+    order = booklet.leaf_order(n_content_pages, 1)
+
+    padded_stream = io.BytesIO()
+    booklet.apply_padding(pdf_stream, padded_stream, len(order))
+
+    ordered_stream = io.BytesIO()
+    booklet.reorder_pages(padded_stream, ordered_stream, order)
+
+    ordered_reader = PyPDF2.PdfFileReader(ordered_stream)
+    n_booklet_leaves = ordered_reader.getNumPages()
+
+    for i in range(n_booklet_leaves):
+        if order[i] < n_content_pages:
+            page_i = ordered_reader.getPage(i)
+            page_text = page_i.extractText()
+            page_string = "Page%d" % order[i]
+            assert page_string in page_text
+
 
