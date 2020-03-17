@@ -41,18 +41,41 @@ def apply_padding(in_file, out_file, pad_to_length):
     writer.write(out_file)
 
 def reorder_pages(in_file, out_file, page_order):
-    """Permute page order of in_file to out_file according to page_order."""
+    """Permute pages of in_file to out_file according to page_order."""
 
     writer = PyPDF2.PdfFileWriter()
     reader = PyPDF2.PdfFileReader(in_file)
+    n_leaves = reader.getNumPages()
+
+    assert n_leaves == len(page_order)
 
     for i in page_order:
         writer.addPage(reader.getPage(i-1))
     
     writer.write(out_file)
 
+def merge_sheets(in_file, out_file):
+    """Merge leaf-pairs into sheets for printing."""
+
+    writer = PyPDF2.PdfFileWriter()
+    reader = PyPDF2.PdfFileReader(in_file)
+    n_leaves = reader.getNumPages()
+
+    assert n_leaves % 2 == 0
+
+    for i in range(n_leaves // 2):
+        i_left = i*2
+        i_right = i*2 + 1
+
+        left_leaf = reader.getPage(i_left)
+        right_leaf = reader.getPage(i_right)
+
+        w = left_leaf.mediaBox.getWidth()
+
+        left_leaf.mergeTranslatedPage(right_leaf, w, 0, expand=True)
+        writer.addPage(left_leaf)
+
+    writer.write(out_file)
+
 if __name__ == "__main__":
     pass
-
-
-    

@@ -65,4 +65,32 @@ def test_reordering(pdf_stream):
             page_string = "Page%d" % order[i]
             assert page_string in page_text
 
+def test_merging(pdf_stream):
+    reader = PyPDF2.PdfFileReader(pdf_stream)
+    n_content_pages = reader.getNumPages()
+    order = booklet.leaf_order(n_content_pages, 1)
 
+    padded_stream = io.BytesIO()
+    ordered_stream = io.BytesIO()
+    merged_stream = io.BytesIO()
+
+    booklet.apply_padding(pdf_stream, padded_stream, len(order))
+    booklet.reorder_pages(padded_stream, ordered_stream, order)
+    booklet.merge_sheets(ordered_stream, merged_stream)
+
+    merged_reader = PyPDF2.PdfFileReader(merged_stream)
+
+    for i in range(merged_reader.getNumPages()):
+        sheet_i = merged_reader.getPage(i)
+        if sheet_i.getContents():
+            sheet_text = sheet_i.extractText()
+            left_i = order[i*2]
+            right_i = order[i*2 + 1]
+
+            right_page_string = "Page%d" % left_i
+            left_page_string = "Page%d" % right_i
+
+            if left_i < n_content_pages:
+                assert left_page_string in sheet_text
+            if right_i < n_content_pages:
+                assert right_page_string in sheet_text
